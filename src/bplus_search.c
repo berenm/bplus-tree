@@ -1,41 +1,53 @@
-#define bplus_tree_search_key_index(operator_m)                                                     \
-    static size_t bplus_tree_search_key_index_ ## operator_m(BplusTree const* tree,                 \
-                                                             size_t const length,                   \
-                                                             BplusKey const keys[BPLUS_TREE_ORDER], \
-                                                             BplusKey const key)                    \
-    {                                                                                               \
-        if (length <= 1 || bplus_key_ ## operator_m(tree, keys[0], key))                            \
-            return 0;                                                                               \
-        else if (!bplus_key_ ## operator_m(tree, keys[length - 1], key))                            \
-            return length - 1;                                                                      \
-                                                                                                    \
-        size_t index = 0;                                                                           \
-        size_t step  = BPLUS_TREE_ORDER;                                                            \
-        while (step >>= 1)                                                                          \
-        {                                                                                           \
-            if (index >= length)                                                                    \
-                index -= step;                                                                      \
-            else if (bplus_key_ ## operator_m(tree, keys[index], key))                              \
-                index -= step;                                                                      \
-            else                                                                                    \
-                index += step;                                                                      \
-        }                                                                                           \
-                                                                                                    \
-        if (bplus_key_ ## operator_m(tree, keys[index], key))                                       \
-            index--;                                                                                \
-                                                                                                    \
-        return index;                                                                               \
-    }
+#define bplus_tree_search_key_index(operator_m, tree_m, node_m, key_m, index_m)              \
+    do                                                                                       \
+    {                                                                                        \
+        if ((node_m)->length <= 1 || operator_m((tree_m), bplus_key_first(node_m), (key_m))) \
+        {                                                                                    \
+            (index_m) = 0;                                                                   \
+        }                                                                                    \
+        else if (!operator_m((tree_m), bplus_key_last(node_m), (key_m)))                     \
+        {                                                                                    \
+            (index_m) = (node_m)->length - 1;                                                \
+        }                                                                                    \
+        else                                                                                 \
+        {                                                                                    \
+            size_t step = BPLUS_TREE_ORDER;                                                  \
+            while (step >>= 1)                                                               \
+            {                                                                                \
+                if ((index_m) >= (node_m)->length)                                           \
+                    (index_m) -= step;                                                       \
+                else if (operator_m((tree_m), bplus_key_at(node_m, (index_m)), (key_m)))     \
+                    (index_m) -= step;                                                       \
+                else                                                                         \
+                    (index_m) += step;                                                       \
+            }                                                                                \
+                                                                                             \
+            if (operator_m((tree_m), bplus_key_at(node_m, (index_m)), (key_m)))              \
+                (index_m)--;                                                                 \
+        }                                                                                    \
+    }                                                                                        \
+    while (0)
 
-bplus_tree_search_key_index(gt)
-bplus_tree_search_key_index(gte)
-
-static size_t bplus_node_get_key_index(BplusTree const* const tree, BplusNode const* const node, BplusKey const key)
+static size_t bplus_node_get_key_index(BplusTree const* tree, BplusNode const* node, BplusKey key)
 {
     g_return_val_if_fail(tree != NULL, 0);
     g_return_val_if_fail(node != NULL, 0);
+    size_t index = 0;
 
-    return bplus_tree_search_key_index_gt(tree, node->length, node->keys, key);
+    bplus_tree_search_key_index(bplus_key_gt, tree, node, key, index);
+
+    return index;
+}
+
+static size_t bplus_node_get_key_index_before(BplusTree const* const tree, BplusNode const* const node, BplusKey const key)
+{
+    g_return_val_if_fail(tree != NULL, 0);
+    g_return_val_if_fail(node != NULL, 0);
+    size_t index = 0;
+
+    bplus_tree_search_key_index(bplus_key_gte, tree, node, key, index);
+
+    return index;
 }
 
 static size_t bplus_node_get_value_index(BplusTree const* const tree, BplusNode const* const node, BplusKey const key, BplusValue const value)
