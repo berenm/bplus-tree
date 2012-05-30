@@ -38,17 +38,10 @@ static void bplus_node_insert_at(BplusTree* tree, BplusNode* node, size_t const 
 
 void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const value)
 {
-    BplusNode* node  = tree->root;
-    size_t     index = bplus_node_get_key_index(tree, node, key);
+    BplusNode* node;
+    size_t     index;
 
-    while (!node->is_leaf)
-    {
-        if (bplus_key_gt(tree, bplus_key_at(node, index), key))
-            bplus_key_at(node, index) = key;
-
-        node  = bplus_node_at(node, index);
-        index = bplus_node_get_key_index(tree, node, key);
-    }
+    bplus_leaf_get_key_location(tree, key, (BplusLeaf**) &node, &index);
 
     /* If the node is not empty, we will insert it after the given index */
     if ((index < node->length) && bplus_key_lte(tree, bplus_key_at(node, index), key))
@@ -62,6 +55,9 @@ void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const val
     else
     {
         bplus_node_insert_at(tree, node, index, 1, &key, &value);
+        if (index == 0)
+            bplus_node_rebalance_propagate(tree, node, key);
+        
         bplus_node_rebalance(tree, node);
     }
 }
