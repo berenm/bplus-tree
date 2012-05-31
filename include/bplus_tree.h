@@ -16,12 +16,13 @@ typedef uint64_t BplusKey;
 typedef gpointer BplusKey;
 #endif /* ifndef BPLUS_TREE_GENERIC */
 
-typedef void*             BplusValue;
-typedef void const*       BplusConstValue;
-typedef struct _BplusTree BplusTree;
-typedef struct _BplusNode BplusNode;
-typedef struct _BplusLeaf BplusLeaf;
-typedef struct _BplusItem BplusItem;
+typedef void*                 BplusValue;
+typedef void const*           BplusConstValue;
+typedef struct _BplusTree     BplusTree;
+typedef struct _BplusNode     BplusNode;
+typedef struct _BplusLeaf     BplusLeaf;
+typedef struct _BplusItem     BplusItem;
+typedef struct _BplusIterator BplusIterator;
 
 #ifndef BPLUS_TREE_GENERIC
 BplusTree* bplus_tree_new(gboolean allow_duplicate_keys);

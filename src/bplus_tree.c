@@ -111,6 +111,7 @@ void bplus_tree_destroy(BplusTree* tree)
 #include "bplus_rebalance.c"
 #include "bplus_insert.c"
 #include "bplus_remove.c"
+#include "bplus_iterator.c"
 
 #ifdef BPLUS_TREE_GATHER_STATS
 
@@ -140,12 +141,12 @@ BplusValue bplus_tree_get(BplusTree* tree, BplusKey key)
     return value;
 }
 
-void bplus_value_print(BplusNode* node, BplusKey key, BplusValue value, int depth)
+void bplus_value_print(BplusNode* node, size_t const index, BplusKey key, BplusValue value, int depth)
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stderr, "%*.s n%lu[label=\"%lu\",fontcolor=\"#000099\"];", 0, indent, key, key);
-    fprintf(stderr, "%*.s n%p->n%lu;", 0, indent, node, key);
+    fprintf(stderr, "%*.s n%p_%zu[label=\"%lu\",fontcolor=\"#000099\"];", 0, indent, node, index, key);
+    fprintf(stderr, "%*.s n%p->n%p_%zu;", 0, indent, node, node, index);
 }
 
 void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int depth)
@@ -154,11 +155,19 @@ void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int dept
 
     fprintf(stderr, "%*.s n%p[label=\"%lu\"];", 0, indent, node, key);
     fprintf(stderr, "%*.s n%p->n%p;", 0, indent, parent, node);
+
+    if (node->is_leaf)
+    {
+        if (((BplusLeaf*) node)->right != NULL)
+            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->right);
+        if (((BplusLeaf*) node)->left != NULL)
+            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->left);
+    }
+
     for (size_t i = 0; i < node->length; ++i)
     {
         if (node->is_leaf)
-            bplus_value_print(node, bplus_key_at(node, i), bplus_value_at(node, i), depth + 2);
-
+            bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
         else
             bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i), depth + 2);
 
@@ -172,15 +181,22 @@ int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
     fprintf(stderr, "echo 'digraph {");
     fprintf(stderr, "graph[ordering=\"out\"];\n");
     fprintf(stderr, "node[width=0.2,height=0.2,fixedsize=true,fontsize=6,fontcolor=\"#990000\",shape=plaintext];");
-    fprintf(stderr, "edge[arrowsize=0.1];");
+    fprintf(stderr, "edge[arrowsize=0.1,fontsize=6];");
 
     BplusNode* node = tree->root;
     fprintf(stderr, "n%p[label=\"0\"];", node);
+    if (node->is_leaf)
+    {
+        if (((BplusLeaf*) node)->right != NULL)
+            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->right);
+        if (((BplusLeaf*) node)->left != NULL)
+            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->left);
+    }
+
     for (size_t i = 0; i < node->length; ++i)
     {
         if (node->is_leaf)
-            bplus_value_print(node, bplus_key_at(node, i), bplus_value_at(node, i), 2);
-
+            bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
         else
             bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i), 2);
 
@@ -193,5 +209,19 @@ int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
 
     fprintf(stderr, "}'| dot -T png -o tree-%d.png\n", count);
     count++;
+    return 0;
+}
+
+int bplus_iterator_print(BplusTree const* tree, BplusIterator const* iterator)
+{
+    bplus_tree_print(tree,
+                     "label=\"iterator\"; i[fontcolor=\"#009900\",label=\"i\"];"
+                     "n%p_%zu->i[label=\"from\"];"
+                     "n%p_%zu->i[color=\"#009900\"];"
+                     "n%p_%zu->i[label=\"to\"];",
+                     iterator->leaf_from, iterator->item_from - iterator->leaf_from->node.items,
+                     iterator->leaf, iterator->item - iterator->leaf->node.items,
+                     iterator->leaf_to, iterator->item_to - iterator->leaf_to->node.items - 1);
+
     return 0;
 }
