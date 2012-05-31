@@ -94,7 +94,9 @@ static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
     else
     {
         for (size_t i = 0; i < node->length; ++i)
+        {
             bplus_node_destroy(tree, bplus_node_at(node, i));
+        }
 
 #ifdef BPLUS_TREE_GATHER_STATS
         tree->node_count--;
@@ -103,4 +105,43 @@ static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
     }
 
     g_slice_free(BplusNode, node);
+}
+
+static void bplus_node_move_and_resize_data(BplusTree const* tree, BplusNode* node, size_t const index_to, size_t const index_from)
+{
+    g_return_if_fail(node != NULL);
+    g_return_if_fail(index_from <= node->length);
+    g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
+
+#ifdef BPLUS_TREE_GATHER_STATS
+    int was_underfilled = bplus_node_underfilled(node);
+    int was_overfilled  = bplus_node_overfilled(node);
+#endif /* ifdef BPLUS_TREE_GATHER_STATS */
+
+    int64_t const resize_length = index_to - index_from;
+    int64_t const move_length   = node->length - index_from;
+    if ((resize_length != 0) && (move_length > 0))
+    {
+        memmove(node->keys + index_to, node->keys + index_from, move_length * sizeof(BplusKey));
+        memmove(node->values + index_to, node->values + index_from, move_length * sizeof(BplusValue));
+    }
+
+    if (resize_length > 0)
+        node->length += resize_length;
+
+    else if (resize_length < 0)
+        node->length -= -resize_length;
+
+#ifdef BPLUS_TREE_GATHER_STATS
+    if (!bplus_node_underfilled(node) && was_underfilled)
+        tree->underflow_count--;
+    else if (bplus_node_underfilled(node) && !was_underfilled)
+        tree->underflow_count++;
+
+    if (bplus_node_overfilled(node) && !was_overfilled)
+        tree->overflow_count++;
+    else if (!bplus_node_overfilled(node) && was_overfilled)
+        tree->overflow_count--;
+#endif /* ifdef BPLUS_TREE_GATHER_STATS */
+
 }

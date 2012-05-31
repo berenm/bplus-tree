@@ -1,39 +1,26 @@
+static void bplus_leaf_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, BplusKey const key, BplusValue const value)
+{
+    g_return_if_fail(node != NULL);
+    g_return_if_fail(index <= node->length);
+    g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
+
+    bplus_node_move_and_resize_data(tree, node, index + 1, index);
+    bplus_key_at(node, index)   = key;
+    bplus_value_at(node, index) = value;
+}
+
 static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* const keys, BplusValue const* const values)
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index <= node->length);
     g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
 
-#ifdef BPLUS_TREE_GATHER_STATS
-    int was_underfilled = bplus_node_underfilled(node);
-    int was_overfilled  = bplus_node_overfilled(node);
-#endif /* ifdef BPLUS_TREE_GATHER_STATS */
-
-    size_t const move_length = node->length - index;
-    if (move_length > 0)
-    {
-        memmove(node->keys + index + length, node->keys + index, move_length * sizeof(BplusKey));
-        memmove(node->values + index + length, node->values + index, move_length * sizeof(BplusValue));
-    }
-
-    node->length += length;
+    bplus_node_move_and_resize_data(tree, node, index + length, index);
     memcpy(node->keys + index, keys, length * sizeof(BplusKey));
     memcpy(node->values + index, values, length * sizeof(BplusValue));
 
-#ifdef BPLUS_TREE_GATHER_STATS
-    if (!bplus_node_underfilled(node) && was_underfilled)
-        tree->underflow_count--;
-
-    if (bplus_node_overfilled(node) && !was_overfilled)
-        tree->overflow_count++;
-#endif /* ifdef BPLUS_TREE_GATHER_STATS */
-
-    if (node->is_leaf)
-        return;
-
     for (size_t i = index; i < index + length; ++i)
         bplus_node_at(node, i)->parent = node;
-
 }
 
 void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const value)
@@ -55,7 +42,7 @@ void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const val
     }
     else
     {
-        bplus_node_insert_at(tree, node, index, 1, &key, &value);
+        bplus_leaf_insert_at(tree, node, index, key, value);
         if (index == 0)
             bplus_rebalance_propagate(tree, &path);
 
