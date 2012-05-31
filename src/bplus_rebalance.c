@@ -123,21 +123,19 @@ static size_t bplus_rebalance_data(BplusTree const* tree, BplusNode* node_left, 
 
     if (amount > 0)
     {
-        size_t const      index  = node_left->length - amount;
-        BplusKey const*   keys   = node_left->keys + index;
-        BplusValue const* values = node_left->values + index;
+        size_t const     index = node_left->length - amount;
+        BplusItem const* items = node_left->items + index;
 
-        bplus_node_insert_at(tree, node_right, 0, amount, keys, values);
+        bplus_node_insert_at(tree, node_right, 0, amount, items);
         bplus_node_remove_at(tree, node_left, index, amount);
 
     }
     else if (amount < 0)
     {
-        size_t const      index  = node_left->length;
-        BplusKey const*   keys   = node_right->keys;
-        BplusValue const* values = node_right->values;
+        size_t const     index = node_left->length;
+        BplusItem const* items = node_right->items;
 
-        bplus_node_insert_at(tree, node_left, index, -amount, keys, values);
+        bplus_node_insert_at(tree, node_left, index, -amount, items);
         bplus_node_remove_at(tree, node_right, 0, -amount);
     }
 
@@ -152,9 +150,8 @@ static void bplus_rebalance_split_node(BplusTree* tree, BplusNode* node_left, si
     BplusNode* const node_right = bplus_node_new_right(tree, node_left);
     bplus_rebalance_data(tree, node_left, node_right);
 
-    BplusKey const   key   = bplus_key_first(node_right);
-    BplusValue const value = node_right;
-    bplus_node_insert_at(tree, node_left->parent, index + 1, 1, &key, &value);
+    BplusItem const item = { .key = bplus_key_first(node_right), .value = node_right };
+    bplus_node_insert_at(tree, node_left->parent, index + 1, 1, &item);
 }
 
 static void bplus_rebalance_new_root(BplusTree* tree)

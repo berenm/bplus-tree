@@ -54,8 +54,8 @@ static void bplus_tree_get_path_to_key(BplusTree const* tree, BplusKey const key
     size_t const     length = tree->height;
     for (size_t i = length; i > 0; --i)
     {
-        for (int i = 0; i < BPLUS_TREE_ORDER * 64 / sizeof(*node->keys); ++i)
-            __builtin_prefetch(node->keys + i * 64 / sizeof(*node->keys));
+        for (int i = 0; i < BPLUS_TREE_ORDER * sizeof(*node->items) / 64; ++i)
+            __builtin_prefetch(node->items + i * 64 / sizeof(*node->items));
 
         size_t const index = bplus_node_get_key_index(tree, node, key);
         path_out->index[i - 1] = index;

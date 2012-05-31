@@ -2,22 +2,23 @@ static void bplus_leaf_insert_at(BplusTree const* tree, BplusNode* node, size_t 
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index <= node->length);
-    g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
 
     bplus_node_move_and_resize_data(tree, node, index + 1, index);
     bplus_key_at(node, index)   = key;
     bplus_value_at(node, index) = value;
 }
 
-static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* const keys, BplusValue const* const values)
+static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusItem const* const items)
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index <= node->length);
     g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
 
     bplus_node_move_and_resize_data(tree, node, index + length, index);
-    memcpy(node->keys + index, keys, length * sizeof(BplusKey));
-    memcpy(node->values + index, values, length * sizeof(BplusValue));
+    memcpy(node->items + index, items, length * sizeof(BplusItem));
+
+    if (node->is_leaf)
+        return;
 
     for (size_t i = index; i < index + length; ++i)
     {

@@ -21,6 +21,7 @@ typedef void const*       BplusConstValue;
 typedef struct _BplusTree BplusTree;
 typedef struct _BplusNode BplusNode;
 typedef struct _BplusLeaf BplusLeaf;
+typedef struct _BplusItem BplusItem;
 
 #ifndef BPLUS_TREE_GENERIC
 BplusTree* bplus_tree_new(gboolean allow_duplicate_keys);

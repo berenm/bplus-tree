@@ -16,24 +16,24 @@ void test_search_key_index(void)
     g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 0xFF) == 0);
 
-    node.keys[0] = 1;
+    bplus_key_at(&node, 0) = 1;
     node.length++;
     g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 1) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 2) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 0xFF) == 0);
 
-    node.keys[0] = 1;
-    node.keys[1] = 1;
+    bplus_key_at(&node, 0) = 1;
+    bplus_key_at(&node, 1) = 1;
     node.length++;
     g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 1) == 1);
     g_assert(bplus_node_get_key_index(&tree, &node, 2) == 1);
     g_assert(bplus_node_get_key_index(&tree, &node, 0xFF) == 1);
 
-    node.keys[0] = 1;
-    node.keys[1] = 1;
-    node.keys[2] = 2;
+    bplus_key_at(&node, 0) = 1;
+    bplus_key_at(&node, 1) = 1;
+    bplus_key_at(&node, 2) = 2;
     node.length++;
     g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 1) == 1);
@@ -41,10 +41,10 @@ void test_search_key_index(void)
     g_assert(bplus_node_get_key_index(&tree, &node, 3) == 2);
     g_assert(bplus_node_get_key_index(&tree, &node, 0xFF) == 2);
 
-    node.keys[0] = 1;
-    node.keys[1] = 1;
-    node.keys[2] = 3;
-    node.keys[3] = 3;
+    bplus_key_at(&node, 0) = 1;
+    bplus_key_at(&node, 1) = 1;
+    bplus_key_at(&node, 2) = 3;
+    bplus_key_at(&node, 3) = 3;
     node.length++;
     g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 1) == 1);
@@ -53,10 +53,10 @@ void test_search_key_index(void)
     g_assert(bplus_node_get_key_index(&tree, &node, 4) == 3);
     g_assert(bplus_node_get_key_index(&tree, &node, 0xFF) == 3);
 
-    node.keys[0] = 1;
-    node.keys[1] = 1;
-    node.keys[2] = 1;
-    node.keys[3] = 1;
+    bplus_key_at(&node, 0) = 1;
+    bplus_key_at(&node, 1) = 1;
+    bplus_key_at(&node, 2) = 1;
+    bplus_key_at(&node, 3) = 1;
     g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     g_assert(bplus_node_get_key_index(&tree, &node, 1) == 3);
     g_assert(bplus_node_get_key_index(&tree, &node, 2) == 3);
@@ -64,15 +64,15 @@ void test_search_key_index(void)
     g_assert(bplus_node_get_key_index(&tree, &node, 4) == 3);
     g_assert(bplus_node_get_key_index(&tree, &node, 0xFF) == 3);
 
-    // node.keys[0] = 1;
-    // node.keys[1] = 2;
-    // node.keys[2] = 3;
-    // node.keys[3] = 4;
-    // node.keys[4] = 4;
-    // node.keys[5] = 4;
-    // node.keys[6] = 6;
-    // node.keys[7] = 6;
-    // node.keys[8] = 9;
+    // bplus_key_at(&node, 0) = 1;
+    // bplus_key_at(&node, 1) = 2;
+    // bplus_key_at(&node, 2) = 3;
+    // bplus_key_at(&node, 3) = 4;
+    // bplus_key_at(&node, 4) = 4;
+    // bplus_key_at(&node, 5) = 4;
+    // bplus_key_at(&node, 6) = 6;
+    // bplus_key_at(&node, 7) = 6;
+    // bplus_key_at(&node, 8) = 9;
     // node.length  = 9;
     // g_assert(bplus_node_get_key_index(&tree, &node, 0) == 0);
     // g_assert(bplus_node_get_key_index(&tree, &node, 1) == 0);
@@ -118,8 +118,8 @@ void test_search_bplus_node_insert_at(void)
     // bplus_node_insert_at(tree, tree->root, 0, 0, (void*) 3);
 
     // g_assert(bplus_value_first(tree->root) == (void*) 3);
-    // g_assert(tree->root->values[1] == (void*) 2);
-    // g_assert(tree->root->values[2] == (void*) 1);
+    // g_assert(bplus_value_at(tree->root, 1) == (void*) 2);
+    // g_assert(bplus_value_at(tree->root, 2) == (void*) 1);
 
     // bplus_node_insert_at(tree, tree->root, 0, 0, (void*) 4);
 
@@ -132,8 +132,8 @@ void test_search_bplus_node_insert_at(void)
     // BplusNode* left = (BplusNode*) bplus_value_first(tree->root);
     // g_assert(left != NULL);
 
-    // g_assert(tree->root->keys[1] == 0);
-    // BplusNode* right = (BplusNode*) tree->root->values[1];
+    // g_assert(bplus_key_at(tree->root, 1) == 0);
+    // BplusNode* right = (BplusNode*) bplus_value_at(tree->root, 1);
     // g_assert(right != NULL);
 
     // g_assert(left->is_leaf);
@@ -141,42 +141,42 @@ void test_search_bplus_node_insert_at(void)
     // g_assert(left->length == 2);
     // g_assert(bplus_key_first(left) == 0);
     // g_assert(bplus_value_first(left) == (void*) 4);
-    // g_assert(left->keys[1] == 0);
-    // g_assert(left->values[1] == (void*) 3);
+    // g_assert(bplus_key_at(left, 1) == 0);
+    // g_assert(bplus_value_at(left, 1) == (void*) 3);
 
     // g_assert(right->is_leaf);
     // g_assert(right->parent == tree->root);
     // g_assert(right->length == 2);
     // g_assert(bplus_key_first(right) == 0);
     // g_assert(bplus_value_first(right) == (void*) 2);
-    // g_assert(right->keys[1] == 0);
-    // g_assert(right->values[1] == (void*) 1);
+    // g_assert(bplus_key_at(right, 1) == 0);
+    // g_assert(bplus_value_at(right, 1) == (void*) 1);
 
     // bplus_node_insert_at(tree, left, 2, 0, (void*) 1);
     // bplus_node_insert_at(tree, left, 2, 0, (void*) 2);
 
     // g_assert(tree->root->length == 3);
 
-    // g_assert(tree->root->keys[1] == 0);
-    // BplusNode* middle = (BplusNode*) tree->root->values[1];
+    // g_assert(bplus_key_at(tree->root, 1) == 0);
+    // BplusNode* middle = (BplusNode*) bplus_value_at(tree->root, 1);
     // g_assert(middle != NULL);
     // g_assert(middle != left);
     // g_assert(middle != right);
 
     // g_assert(bplus_key_first(tree->root) == 0);
     // g_assert(bplus_value_first(tree->root) == left);
-    // g_assert(tree->root->keys[1] == 0);
-    // g_assert(tree->root->values[1] == middle);
-    // g_assert(tree->root->keys[2] == 0);
-    // g_assert(tree->root->values[2] == right);
+    // g_assert(bplus_key_at(tree->root, 1) == 0);
+    // g_assert(bplus_value_at(tree->root, 1) == middle);
+    // g_assert(bplus_key_at(tree->root, 2) == 0);
+    // g_assert(bplus_value_at(tree->root, 2) == right);
 
     // g_assert(middle->is_leaf);
     // g_assert(middle->parent == tree->root);
     // g_assert(middle->length == 2);
     // g_assert(bplus_key_first(middle) == 0);
     // g_assert(bplus_value_first(middle) == (void*) 2);
-    // g_assert(middle->keys[1] == 0);
-    // g_assert(middle->values[1] == (void*) 1);
+    // g_assert(bplus_key_at(middle, 1) == 0);
+    // g_assert(bplus_value_at(middle, 1) == (void*) 1);
 
     // g_assert(tree->first == (BplusLeaf*) left);
     // g_assert(tree->last == (BplusLeaf*) right);
@@ -207,8 +207,8 @@ void test_search_bplus_tree_insert_k0(void)
     bplus_tree_insert(tree, 0, (void*) 3);
 
     g_assert(bplus_value_first(tree->root) == (void*) 1);
-    g_assert(tree->root->values[1] == (void*) 2);
-    g_assert(tree->root->values[2] == (void*) 3);
+    g_assert(bplus_value_at(tree->root, 1) == (void*) 2);
+    g_assert(bplus_value_at(tree->root, 2) == (void*) 3);
 
     bplus_tree_insert(tree, 0, (void*) 4);
 
@@ -221,8 +221,8 @@ void test_search_bplus_tree_insert_k0(void)
     BplusNode* left = (BplusNode*) bplus_value_first(tree->root);
     g_assert(left != NULL);
 
-    g_assert(tree->root->keys[1] == 0);
-    BplusNode* right = (BplusNode*) tree->root->values[1];
+    g_assert(bplus_key_at(tree->root, 1) == 0);
+    BplusNode* right = (BplusNode*) bplus_value_at(tree->root, 1);
     g_assert(right != NULL);
 
     g_assert(left->is_leaf);
@@ -230,43 +230,43 @@ void test_search_bplus_tree_insert_k0(void)
     g_assert(left->length == 2);
     g_assert(bplus_key_first(left) == 0);
     g_assert(bplus_value_first(left) == (void*) 1);
-    g_assert(left->keys[1] == 0);
-    g_assert(left->values[1] == (void*) 2);
+    g_assert(bplus_key_at(left, 1) == 0);
+    g_assert(bplus_value_at(left, 1) == (void*) 2);
 
     g_assert(right->is_leaf);
     g_assert(right->parent == tree->root);
     g_assert(right->length == 2);
     g_assert(bplus_key_first(right) == 0);
     g_assert(bplus_value_first(right) == (void*) 3);
-    g_assert(right->keys[1] == 0);
-    g_assert(right->values[1] == (void*) 4);
+    g_assert(bplus_key_at(right, 1) == 0);
+    g_assert(bplus_value_at(right, 1) == (void*) 4);
 
     bplus_tree_insert(tree, 0, (void*) 5);
     bplus_tree_insert(tree, 0, (void*) 6);
 
     g_assert(tree->root->length == 3);
 
-    g_assert(tree->root->keys[2] == 0);
+    g_assert(bplus_key_at(tree->root, 2) == 0);
     BplusNode* middle = right;
-    right = (BplusNode*) tree->root->values[2];
+    right = (BplusNode*) bplus_value_at(tree->root, 2);
     g_assert(middle != NULL);
     g_assert(middle != left);
     g_assert(middle != right);
 
     g_assert(bplus_key_first(tree->root) == 0);
     g_assert(bplus_value_first(tree->root) == left);
-    g_assert(tree->root->keys[1] == 0);
-    g_assert(tree->root->values[1] == middle);
-    g_assert(tree->root->keys[2] == 0);
-    g_assert(tree->root->values[2] == right);
+    g_assert(bplus_key_at(tree->root, 1) == 0);
+    g_assert(bplus_value_at(tree->root, 1) == middle);
+    g_assert(bplus_key_at(tree->root, 2) == 0);
+    g_assert(bplus_value_at(tree->root, 2) == right);
 
     g_assert(right->is_leaf);
     g_assert(right->parent == tree->root);
     g_assert(right->length == 2);
     g_assert(bplus_key_first(right) == 0);
     g_assert(bplus_value_first(right) == (void*) 5);
-    g_assert(right->keys[1] == 0);
-    g_assert(right->values[1] == (void*) 6);
+    g_assert(bplus_key_at(right, 1) == 0);
+    g_assert(bplus_value_at(right, 1) == (void*) 6);
 
     g_assert(tree->first == (BplusLeaf*) left);
     g_assert(tree->last == (BplusLeaf*) right);
@@ -295,13 +295,13 @@ void test_search_bplus_tree_insert_k(void)
 
     bplus_tree_insert(tree, 1, (void*) 2);
     g_assert(bplus_value_first(tree->root) == (void*) 2);
-    g_assert(tree->root->values[1] == (void*) 1);
+    g_assert(bplus_value_at(tree->root, 1) == (void*) 1);
 
     bplus_tree_insert(tree, 2, (void*) 3);
 
     g_assert(bplus_value_first(tree->root) == (void*) 2);
-    g_assert(tree->root->values[1] == (void*) 3);
-    g_assert(tree->root->values[2] == (void*) 1);
+    g_assert(bplus_value_at(tree->root, 1) == (void*) 3);
+    g_assert(bplus_value_at(tree->root, 2) == (void*) 1);
 
     bplus_tree_insert(tree, 2, (void*) 4);
 
@@ -314,8 +314,8 @@ void test_search_bplus_tree_insert_k(void)
     BplusNode* left = (BplusNode*) bplus_value_first(tree->root);
     g_assert(left != NULL);
 
-    g_assert(tree->root->keys[1] == 2 || bplus_tree_print(tree, ""));
-    BplusNode* right = (BplusNode*) tree->root->values[1];
+    g_assert(bplus_key_at(tree->root, 1) == 2 || bplus_tree_print(tree, ""));
+    BplusNode* right = (BplusNode*) bplus_value_at(tree->root, 1);
     g_assert(right != NULL);
 
     g_assert(left->is_leaf);
@@ -323,19 +323,19 @@ void test_search_bplus_tree_insert_k(void)
     g_assert(left->length == 2);
     g_assert(bplus_key_first(left) == 1);
     g_assert(bplus_value_first(left) == (void*) 2);
-    g_assert(left->keys[1] == 2);
-    g_assert(left->values[1] == (void*) 3);
+    g_assert(bplus_key_at(left, 1) == 2);
+    g_assert(bplus_value_at(left, 1) == (void*) 3);
 
     g_assert(right->is_leaf);
     g_assert(right->parent == tree->root);
     g_assert(right->length == 2);
     g_assert(bplus_key_first(right) == 2);
     g_assert(bplus_value_first(right) == (void*) 4);
-    g_assert(right->keys[1] == 3);
-    g_assert(right->values[1] == (void*) 1);
+    g_assert(bplus_key_at(right, 1) == 3);
+    g_assert(bplus_value_at(right, 1) == (void*) 1);
 
     g_assert(bplus_key_first(tree->root) == 1);
-    g_assert(tree->root->keys[1] == 2);
+    g_assert(bplus_key_at(tree->root, 1) == 2);
 
     bplus_tree_insert(tree, 3, (void*) 5);
     bplus_tree_insert(tree, 3, (void*) 6);
@@ -343,22 +343,22 @@ void test_search_bplus_tree_insert_k(void)
 
     /* Should not have splitted */
     g_assert(bplus_value_first(tree->root) == (void*) left);
-    g_assert(tree->root->values[1] == (void*) right);
+    g_assert(bplus_value_at(tree->root, 1) == (void*) right);
 
     bplus_tree_insert(tree, 2, (void*) 7);
     g_assert(tree->root->length == 3);
     g_assert(bplus_key_first(tree->root) == 1);
-    g_assert(tree->root->keys[1] == 2);
-    g_assert(tree->root->keys[2] == 3);
+    g_assert(bplus_key_at(tree->root, 1) == 2);
+    g_assert(bplus_key_at(tree->root, 2) == 3);
 
     // /* Should split root again */
     // bplus_tree_insert(tree, 4, (void*) 8);
     // g_assert(tree->root->length == 3);
     // g_assert(bplus_value_first(tree->root) != (void*) left || bplus_tree_print(tree));
-    // g_assert(tree->root->values[1] != (void*) right);
+    // g_assert(bplus_value_at(tree->root, 1) != (void*) right);
 
     // g_assert(bplus_key_first(tree->root) == 1);
-    // g_assert(tree->root->keys[1] == 3);
+    // g_assert(bplus_key_at(tree->root, 1) == 3);
 
     /* This should propagate 0 up to root */
     bplus_tree_insert(tree, 0, (void*) 9);

@@ -14,7 +14,7 @@ static BplusNode* bplus_node_new_right(BplusTree* tree, BplusNode* bplus_node_le
 static void       bplus_node_init(BplusNode* node, gboolean is_leaf);
 static void       bplus_node_destroy(BplusTree* tree, BplusNode* node);
 
-static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* keys, BplusValue const* values);
+static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusItem const* items);
 static void bplus_node_remove_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length);
 
 static BplusLeaf* bplus_leaf_new(BplusTree* tree);

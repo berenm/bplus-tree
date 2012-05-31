@@ -1,8 +1,13 @@
+struct _BplusItem
+{
+    BplusKey   key;
+    BplusValue value;
+};
+
 struct _BplusNode
 {
-    size_t     length;
-    BplusKey   keys[BPLUS_TREE_ORDER];
-    BplusValue values[BPLUS_TREE_ORDER];
+    size_t    length;
+    BplusItem items[BPLUS_TREE_ORDER];
 
     gboolean   is_leaf;
     BplusNode* parent;
@@ -26,10 +31,10 @@ struct _BplusNode
 
 #endif /* ifndef BPLUS_TREE_GENERIC */
 
-#define bplus_key_at(node_m, index_m)   (((BplusNode*) node_m)->keys[(index_m)])
+#define bplus_key_at(node_m, index_m)   (((BplusNode*) node_m)->items[(index_m)].key)
 #define bplus_key_first(node_m)         bplus_key_at(node_m, 0)
 #define bplus_key_last(node_m)          bplus_key_at(node_m, (node_m)->length - 1)
-#define bplus_value_at(node_m, index_m) (((BplusNode*) node_m)->values[(index_m)])
+#define bplus_value_at(node_m, index_m) (((BplusNode*) node_m)->items[(index_m)].value)
 #define bplus_value_first(node_m)       bplus_value_at(node_m, 0)
 #define bplus_value_last(node_m)        bplus_value_at(node_m, (node_m)->length - 1)
 #define bplus_node_at(node_m, index_m)  ((BplusNode*) bplus_value_at(node_m, index_m))
@@ -111,7 +116,6 @@ static void bplus_node_move_and_resize_data(BplusTree const* tree, BplusNode* no
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index_from <= node->length);
-    g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
 
 #ifdef BPLUS_TREE_GATHER_STATS
     int was_underfilled = bplus_node_underfilled(node);
@@ -119,12 +123,12 @@ static void bplus_node_move_and_resize_data(BplusTree const* tree, BplusNode* no
 #endif /* ifdef BPLUS_TREE_GATHER_STATS */
 
     int64_t const resize_length = index_to - index_from;
-    int64_t const move_length   = node->length - index_from;
-    if ((resize_length != 0) && (move_length > 0))
-    {
-        memmove(node->keys + index_to, node->keys + index_from, move_length * sizeof(BplusKey));
-        memmove(node->values + index_to, node->values + index_from, move_length * sizeof(BplusValue));
-    }
+    if (resize_length == 0)
+        return;
+
+    int64_t const move_length = node->length - index_from;
+    if (move_length > 0)
+        memmove(node->items + index_to, node->items + index_from, move_length * sizeof(BplusItem));
 
     if (resize_length > 0)
         node->length += resize_length;
