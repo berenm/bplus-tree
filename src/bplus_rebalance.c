@@ -191,7 +191,7 @@ static int bplus_rebalance_try_merge(BplusTree* tree, BplusNode* node, size_t co
         bplus_node_remove_at(tree, node->parent, index_right, 1);
         bplus_node_destroy(tree, node_right);
     }
-    else if (bplus_key_gt(tree, key_right, bplus_key_first(node_right)))
+    else
     {
         bplus_key_at(node->parent, index_right) = bplus_key_first(node_right);
     }
