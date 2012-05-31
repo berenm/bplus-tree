@@ -1,4 +1,4 @@
-static void bplus_node_insert_at(BplusTree* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* const keys, BplusValue const* const values)
+static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* const keys, BplusValue const* const values)
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index <= node->length);
@@ -38,10 +38,11 @@ static void bplus_node_insert_at(BplusTree* tree, BplusNode* node, size_t const 
 
 void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const value)
 {
-    BplusNode* node;
-    size_t     index;
+    BplusPath path;
+    bplus_tree_get_path_to_key(tree, key, &path);
 
-    bplus_leaf_get_key_location(tree, key, (BplusLeaf**) &node, &index);
+    size_t     index = path.index[0];
+    BplusNode* node  = (BplusNode*) path.leaf;
 
     /* If the node is not empty, we will insert it after the given index */
     if ((index < node->length) && bplus_key_lte(tree, bplus_key_at(node, index), key))
@@ -56,8 +57,9 @@ void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const val
     {
         bplus_node_insert_at(tree, node, index, 1, &key, &value);
         if (index == 0)
-            bplus_node_rebalance_propagate(tree, node, key);
-        
-        bplus_node_rebalance(tree, node);
+            bplus_rebalance_propagate(tree, &path);
+
+        if (bplus_node_overfilled(node))
+            bplus_rebalance_overfilled(tree, &path);
     }
 }

@@ -14,8 +14,8 @@ static BplusNode* bplus_node_new_right(BplusTree* tree, BplusNode* bplus_node_le
 static void       bplus_node_init(BplusNode* node, gboolean is_leaf);
 static void       bplus_node_destroy(BplusTree* tree, BplusNode* node);
 
-static void bplus_node_insert_at(BplusTree* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* keys, BplusValue const* values);
-static void bplus_node_remove_at(BplusTree* tree, BplusNode* node, size_t const index, size_t const length);
+static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusKey const* keys, BplusValue const* values);
+static void bplus_node_remove_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length);
 
 static BplusLeaf* bplus_leaf_new(BplusTree* tree);
 static BplusLeaf* bplus_leaf_new_right(BplusTree* tree, BplusLeaf* bplus_leaf_left);
@@ -30,11 +30,11 @@ struct _BplusTree
     BplusLeaf* first;
     BplusLeaf* last;
 
+    size_t   height;
     gint     ref_count;
     gboolean allow_duplicate_keys;
 
 #ifdef BPLUS_TREE_GATHER_STATS
-    size_t height;
     size_t node_count;
     size_t leaf_count;
     size_t underflow_count;
@@ -80,12 +80,9 @@ BplusTree* bplus_tree_new(gboolean allow_duplicate_keys
     tree->last  = tree->first;
     tree->root  = (BplusNode*) tree->first;
 
+    tree->height               = 1;
     tree->ref_count            = 1;
     tree->allow_duplicate_keys = allow_duplicate_keys;
-
-#ifdef BPLUS_TREE_GATHER_STATS
-    tree->height = 1;
-#endif /* ifdef BPLUS_TREE_GATHER_STATS */
 
 #ifdef BPLUS_TREE_GENERIC
     tree->compare_keys = key_compare_func;
@@ -130,15 +127,17 @@ void bplus_tree_print_stats(BplusTree* tree)
 
 BplusValue bplus_tree_get(BplusTree* tree, BplusKey key)
 {
-    BplusNode* node;
-    size_t     index;
+    BplusPath path;
+    bplus_tree_get_path_to_key(tree, key, &path);
 
-    bplus_leaf_get_key_location(tree, key, (BplusLeaf**) &node, &index);
+    size_t const     index = path.index[0];
+    BplusNode const* node  = path.leaf;
+    BplusValue       value = NULL;
 
     if (bplus_key_eq(tree, bplus_key_at(node, index), key))
-        return bplus_value_at(node, index);
+        value = bplus_value_at(node, index);
 
-    return NULL;
+    return value;
 }
 
 void bplus_value_print(BplusNode* node, BplusKey key, BplusValue value, int depth)

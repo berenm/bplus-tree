@@ -1,4 +1,4 @@
-static void bplus_node_remove_at(BplusTree* tree, BplusNode* node, size_t const index, size_t const length)
+static void bplus_node_remove_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length)
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index < node->length || bplus_tree_print(tree, "f[fixedsize=false,color=green,label=\"remove_at(%lu, %lu)\"];f->n%p;", index, length, node));
@@ -28,35 +28,19 @@ static void bplus_node_remove_at(BplusTree* tree, BplusNode* node, size_t const 
 
 void bplus_tree_remove(BplusTree* tree, BplusKey const key)
 {
-    BplusNode* node;
-    size_t     index;
+    BplusPath path;
+    bplus_tree_get_path_to_key(tree, key, &path);
 
-    bplus_leaf_get_key_location(tree, key, (BplusLeaf**) &node, &index);
+    size_t const index = path.index[0];
+    BplusNode*   node  = (BplusNode*) path.leaf;
+
     if (bplus_key_eq(tree, bplus_key_at(node, index), key))
     {
         bplus_node_remove_at(tree, node, index, 1);
-
         if (index == 0)
-            bplus_node_rebalance_propagate(tree, node, key);
+            bplus_rebalance_propagate(tree, &path);
 
-        bplus_node_rebalance(tree, node);
-    }
-}
-
-void bplus_tree_remove_value(BplusTree* tree, BplusKey const key, BplusValue const value)
-{
-    BplusNode* node;
-    size_t     index;
-
-    bplus_leaf_get_key_value_location(tree, key, value, (BplusLeaf**) &node, &index);
-    if ((node != NULL) &&
-        bplus_key_eq(tree, bplus_key_at(node, index), key) && (bplus_value_at(node, index) == value))
-    {
-        bplus_node_remove_at(tree, node, index, 1);
-
-        if (index == 0)
-            bplus_node_rebalance_propagate(tree, node, key);
-
-        bplus_node_rebalance(tree, node);
+        if (bplus_node_underfilled(node))
+            bplus_rebalance_underfilled(tree, &path);
     }
 }
