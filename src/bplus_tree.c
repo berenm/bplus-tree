@@ -144,8 +144,8 @@ void bplus_value_print(BplusNode* node, BplusKey key, BplusValue value, int dept
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stderr, "%*.s n%p[label=\"%lu\"];", 0, indent, value, key);
-    fprintf(stderr, "%*.s n%p->n%p;", 0, indent, node, value);
+    fprintf(stderr, "%*.s n%lu[label=\"%lu\",fontcolor=\"#000099\"];", 0, indent, key, key);
+    fprintf(stderr, "%*.s n%p->n%lu;", 0, indent, node, key);
 }
 
 void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int depth)
@@ -170,7 +170,8 @@ int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
     static int count = 0;
 
     fprintf(stderr, "echo 'digraph {");
-    fprintf(stderr, "node[width=0.1,height=0.1,fixedsize=true,fontsize=6,color=red];");
+    fprintf(stderr, "graph[ordering=\"out\"];\n");
+    fprintf(stderr, "node[width=0.2,height=0.2,fixedsize=true,fontsize=6,fontcolor=\"#990000\",shape=plaintext];");
     fprintf(stderr, "edge[arrowsize=0.1];");
 
     BplusNode* node = tree->root;
