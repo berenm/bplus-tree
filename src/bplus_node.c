@@ -94,7 +94,9 @@ static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
     else
     {
         for (size_t i = 0; i < node->length; ++i)
+        {
             bplus_node_destroy(tree, bplus_node_at(node, i));
+        }
 
 #ifdef BPLUS_TREE_GATHER_STATS
         tree->node_count--;
@@ -103,4 +105,27 @@ static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
     }
 
     g_slice_free(BplusNode, node);
+}
+
+static int bplus_node_is_ordered(BplusTree const* tree, BplusNode const* node)
+{
+    int ordered = 1;
+
+    if ((node->length > 0) && !node->is_leaf)
+    {
+        ordered &= bplus_key_gte(tree, bplus_key_first(bplus_node_first(node)), bplus_key_first(node));
+        ordered &= bplus_node_is_ordered(tree, bplus_node_first(node));
+    }
+    for (size_t i = 1; i < node->length; ++i)
+    {
+        ordered &= !bplus_key_gt(tree, node->keys[i - 1], node->keys[i]);
+        if (!node->is_leaf)
+        {
+            ordered &= bplus_key_lte(tree, bplus_key_last(bplus_node_at(node, i - 1)), bplus_key_at(node, i));
+            ordered &= bplus_key_gte(tree, bplus_key_first(bplus_node_at(node, i)), bplus_key_at(node, i));
+            ordered &= bplus_node_is_ordered(tree, bplus_node_at(node, i));
+        }
+    }
+
+    return ordered;
 }

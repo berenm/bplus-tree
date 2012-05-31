@@ -105,6 +105,12 @@ void bplus_tree_destroy(BplusTree* tree)
     bplus_tree_unref(tree);
 }
 
+static int bplus_node_is_ordered(BplusTree const* tree, BplusNode const* node);
+int bplus_tree_is_ordered(BplusTree const* tree)
+{
+    return bplus_node_is_ordered(tree, tree->root);
+}
+
 #include "bplus_node.c"
 #include "bplus_leaf.c"
 #include "bplus_search.c"

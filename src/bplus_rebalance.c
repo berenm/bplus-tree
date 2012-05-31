@@ -16,6 +16,8 @@ static void bplus_rebalance_propagate(BplusTree const* tree, BplusPath* path)
 
         node = node->parent;
     }
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"bplus_rebalance_propagate()\"; n%p[fontcolor=\"#009900\"];", node));
 }
 
 static int64_t bplus_node_get_rebalance_amount(BplusTree const* tree, BplusNode const* node_left, BplusNode const* node_right)
@@ -130,6 +132,9 @@ static size_t bplus_rebalance_data(BplusTree const* tree, BplusNode* node_left, 
         bplus_node_insert_at(tree, node_right, 0, amount, keys, values);
         bplus_node_remove_at(tree, node_left, index, amount);
 
+        if (!bplus_tree_is_ordered(tree))
+            bplus_tree_print(tree, "label=\"bplus_rebalance_data(a: %d, i: %lu)\"; n%p[fontcolor=\"#009900\"]; n%p[fontcolor=\"#009900\"];", amount, index, node_left, node_right);
+
     }
     else if (amount < 0)
     {
@@ -139,6 +144,9 @@ static size_t bplus_rebalance_data(BplusTree const* tree, BplusNode* node_left, 
 
         bplus_node_insert_at(tree, node_left, index, -amount, keys, values);
         bplus_node_remove_at(tree, node_right, 0, -amount);
+
+        if (!bplus_tree_is_ordered(tree))
+            bplus_tree_print(tree, "label=\"bplus_rebalance_data(a: %d, i: %lu)\"; n%p[fontcolor=\"#009900\"]; n%p[fontcolor=\"#009900\"];", amount, index, node_left, node_right);
     }
 
     return 0;
@@ -151,6 +159,8 @@ static void bplus_rebalance_split_node(BplusTree* tree, BplusNode* node_left, si
 
     BplusNode* const node_right = bplus_node_new_right(tree, node_left);
     bplus_rebalance_data(tree, node_left, node_right);
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"bplus_rebalance_split_node()\"; n%p[fontcolor=\"#009900\"]; n%p[fontcolor=\"#009900\"];", node_left, node_right));
 
     BplusKey const   key   = bplus_key_first(node_right);
     BplusValue const value = node_right;
@@ -195,6 +205,8 @@ static int bplus_rebalance_try_merge(BplusTree* tree, BplusNode* node, size_t co
     {
         bplus_key_at(node->parent, index_right) = bplus_key_first(node_right);
     }
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"bplus_rebalance_try_merge()\"; n%p[fontcolor=\"#009900\"]; n%p[fontcolor=\"#009900\"];", node_left, node_right));
     return 1;
 }
 
@@ -204,6 +216,7 @@ static void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
     g_return_if_fail(path != NULL);
 
     BplusNode* node = (BplusNode*) path->leaf;
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"bplus_rebalance_overfilled()\"; n%p[fontcolor=\"#009900\"];", node));
     for (size_t i = 1; i < path->length; ++i)
     {
         if (!bplus_node_overfilled(node))
@@ -214,6 +227,7 @@ static void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
             bplus_rebalance_split_node(tree, node, index);
 
         node = node->parent;
+        g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"bplus_rebalance_overfilled()\"; n%p[fontcolor=\"#009900\"];", node));
     }
 
     if (bplus_node_overfilled(node))
@@ -227,6 +241,8 @@ static void bplus_rebalance_shrink_tree(BplusTree* tree)
 {
     g_return_if_fail(tree != NULL);
     g_return_if_fail(tree->root != NULL);
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"shrink()\";"));
 
     size_t i = 0;
     for (; i < tree->height; ++i)
@@ -244,6 +260,8 @@ static void bplus_rebalance_shrink_tree(BplusTree* tree)
     }
 
     tree->height -= i;
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"shrink()\";"));
 }
 
 static void bplus_rebalance_underfilled(BplusTree* tree, BplusPath const* path)
@@ -252,6 +270,8 @@ static void bplus_rebalance_underfilled(BplusTree* tree, BplusPath const* path)
     g_return_if_fail(path != NULL);
 
     BplusNode* node = (BplusNode*) path->leaf;
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"underfilled()\"; n%p[fontcolor=\"#009900\"];", node));
+
     for (size_t i = 1; i < path->length; ++i)
     {
         if (!bplus_node_underfilled(node))
@@ -265,6 +285,7 @@ static void bplus_rebalance_underfilled(BplusTree* tree, BplusPath const* path)
         }
 
         node = node->parent;
+        g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"underfilled()\"; n%p[fontcolor=\"#009900\"];", node));
     }
 
     bplus_rebalance_shrink_tree(tree);

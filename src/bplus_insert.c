@@ -4,6 +4,8 @@ static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t 
     g_return_if_fail(index <= node->length);
     g_return_if_fail(node->length + length <= BPLUS_TREE_ORDER);
 
+    g_assert(bplus_node_is_ordered(tree, node) || bplus_tree_print(tree, "label=\"insert_at(i:%lu, l:%lu)\"; n%p[fontcolor=\"#009900\"];", index, length, node));
+
 #ifdef BPLUS_TREE_GATHER_STATS
     int was_underfilled = bplus_node_underfilled(node);
     int was_overfilled  = bplus_node_overfilled(node);
@@ -28,16 +30,22 @@ static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t 
         tree->overflow_count++;
 #endif /* ifdef BPLUS_TREE_GATHER_STATS */
 
+    g_assert(bplus_node_is_ordered(tree, node) || bplus_tree_print(tree, "label=\"insert_at(i:%lu, l:%lu)\"; n%p[fontcolor=\"#009900\"];", index, length, node));
+
     if (node->is_leaf)
         return;
 
     for (size_t i = index; i < index + length; ++i)
+    {
         bplus_node_at(node, i)->parent = node;
+    }
 
 }
 
 void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const value)
 {
+    g_assert(bplus_tree_is_ordered(tree));
+
     BplusPath path;
     bplus_tree_get_path_to_key(tree, key, &path);
 
@@ -47,6 +55,8 @@ void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const val
     /* If the node is not empty, we will insert it after the given index */
     if ((index < node->length) && bplus_key_lte(tree, bplus_key_at(node, index), key))
         index++;
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"insert(i:%lu, k:%lu)\"; n%p[fontcolor=\"#009900\"];", index, key, node));
 
     /* If we don't allow duplicate keys, simply replace the old value */
     if (!tree->allow_duplicate_keys && (index > 0) && bplus_key_eq(tree, bplus_key_at(node, index - 1), key))
@@ -62,4 +72,6 @@ void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const val
         if (bplus_node_overfilled(node))
             bplus_rebalance_overfilled(tree, &path);
     }
+
+    g_assert(bplus_tree_is_ordered(tree) || bplus_tree_print(tree, "label=\"insert(i:%lu, k:%lu)\"; n%p[fontcolor=\"#009900\"];", index, key, node));
 }
