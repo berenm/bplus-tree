@@ -20,7 +20,9 @@ static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t 
     memcpy(node->values + index, values, length * sizeof(BplusValue));
 
     for (size_t i = index; i < index + length; ++i)
+    {
         bplus_node_at(node, i)->parent = node;
+    }
 }
 
 void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const value)
@@ -35,18 +37,10 @@ void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const val
     if ((index < node->length) && bplus_key_lte(tree, bplus_key_at(node, index), key))
         index++;
 
-    /* If we don't allow duplicate keys, simply replace the old value */
-    if (!tree->allow_duplicate_keys && (index > 0) && bplus_key_eq(tree, bplus_key_at(node, index - 1), key))
-    {
-        bplus_value_at(node, index - 1) = value;
-    }
-    else
-    {
-        bplus_leaf_insert_at(tree, node, index, key, value);
-        if (index == 0)
-            bplus_rebalance_propagate(tree, &path);
+    bplus_leaf_insert_at(tree, node, index, key, value);
+    if (index == 0)
+        bplus_rebalance_propagate(tree, &path);
 
-        if (bplus_node_overfilled(node))
-            bplus_rebalance_overfilled(tree, &path);
-    }
+    if (bplus_node_overfilled(node))
+        bplus_rebalance_overfilled(tree, &path);
 }
