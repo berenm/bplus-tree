@@ -19,22 +19,15 @@ struct _BplusPath
         }                                                                                    \
         else                                                                                 \
         {                                                                                    \
-            size_t index = 0;                                                                \
-            size_t step  = BPLUS_TREE_ORDER;                                                 \
-            while (step >>= 1)                                                               \
+            size_t index = 1;                                                                \
+            while (index < (node_m)->length - 1)                                             \
             {                                                                                \
-                if (index >= (node_m)->length)                                               \
-                    index -= step;                                                           \
-                else if (operator_m((tree_m), bplus_key_at(node_m, index), (key_m)))         \
-                    index -= step;                                                           \
-                else                                                                         \
-                    index += step;                                                           \
+                if (operator_m(tree, bplus_key_at(node_m, index), key))                      \
+                    break;                                                                   \
+                ++index;                                                                     \
             }                                                                                \
                                                                                              \
-            if (operator_m((tree_m), bplus_key_at(node_m, index), (key_m)))                  \
-                index--;                                                                     \
-                                                                                             \
-            return index;                                                                    \
+            return --index;                                                                  \
         }                                                                                    \
     }                                                                                        \
     while (0)
@@ -65,6 +58,9 @@ static void bplus_tree_get_path_to_key(BplusTree const* tree, BplusKey const key
 
     for (size_t i = length; i > 0; --i)
     {
+        for (int i = 0; i < BPLUS_TREE_ORDER / 8; ++i)
+            __builtin_prefetch(node->keys + i * 8);
+
         size_t const index = bplus_node_get_key_index(tree, node, key);
         path_out->index[i - 1] = index;
         if (i == 1)
