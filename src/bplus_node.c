@@ -37,7 +37,7 @@ struct _BplusNode
 #define bplus_node_last(node_m)         ((BplusNode*) bplus_value_last(node_m))
 
 #define bplus_node_overfilled(node_m)  ((node_m)->length > (BPLUS_TREE_ORDER - 1))
-#define bplus_node_underfilled(node_m) ((node_m)->length <= 1)
+#define bplus_node_underfilled(node_m) ((node_m)->length < 1)
 
 static BplusNode* bplus_node_new(BplusTree* tree)
 {
@@ -94,7 +94,9 @@ static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
     else
     {
         for (size_t i = 0; i < node->length; ++i)
+        {
             bplus_node_destroy(tree, bplus_node_at(node, i));
+        }
 
 #ifdef BPLUS_TREE_GATHER_STATS
         tree->node_count--;
