@@ -1,8 +1,13 @@
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
+
 #ifndef BPLUS_TREE_ORDER
 # define BPLUS_TREE_ORDER 4
 #endif /* ifndef BPLUS_TREE_ORDER */
 
-#include "bplus_tree.c"
+#include "bplus_tree_all.c"
 
 void test_search_key_index(void)
 {
@@ -84,7 +89,7 @@ void test_search_key_index(void)
 
 void test_search_bplus_tree_new(void)
 {
-    BplusTree* tree = bplus_tree_new(TRUE);
+    BplusTree* tree = bplus_tree_new();
 
     g_assert(tree != NULL);
     g_assert(tree->root != NULL);
@@ -103,7 +108,7 @@ void test_search_bplus_tree_new(void)
 
 void test_search_bplus_node_insert_at(void)
 {
-    // BplusTree* tree = bplus_tree_new(TRUE);
+    // BplusTree* tree = bplus_tree_new();
 
     // bplus_node_insert_at(tree, tree->root, 0, 0, (void*) 1);
 
@@ -192,7 +197,7 @@ void test_search_bplus_node_insert_at(void)
 
 void test_search_bplus_tree_insert_k0(void)
 {
-    BplusTree* tree = bplus_tree_new(TRUE);
+    BplusTree* tree = bplus_tree_new();
 
     bplus_tree_insert(tree, 0, (void*) 1);
 
@@ -282,7 +287,7 @@ void test_search_bplus_tree_insert_k0(void)
 
 void test_search_bplus_tree_insert_k(void)
 {
-    BplusTree* tree = bplus_tree_new(TRUE);
+    BplusTree* tree = bplus_tree_new();
 
     bplus_tree_insert(tree, 3, (void*) 1);
 
@@ -373,7 +378,7 @@ void test_search_bplus_tree_insert_k(void)
 
 void test_search_bplus_tree_remove_k(void)
 {
-    BplusTree* tree = bplus_tree_new(TRUE);
+    BplusTree* tree = bplus_tree_new();
 
     bplus_tree_insert(tree, 3, (void*) 1);
     bplus_tree_insert(tree, 1, (void*) 2);
@@ -419,7 +424,7 @@ void test_search_bplus_tree_remove_k(void)
 
 void test_search_bplus_tree_iterator(void)
 {
-    BplusTree* tree = bplus_tree_new(TRUE);
+    BplusTree* tree = bplus_tree_new();
 
     bplus_tree_insert(tree, 3, (void*) 1);
     bplus_tree_insert(tree, 1, (void*) 2);

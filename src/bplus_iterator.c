@@ -1,13 +1,12 @@
-struct _BplusIterator
-{
-    BplusItem const* item;
-    BplusLeaf const* leaf;
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
 
-    BplusLeaf const* leaf_from;
-    BplusItem const* item_from;
-    BplusLeaf const* leaf_to;
-    BplusItem const* item_to;
-};
+#include "bplus_iterator.h"
+
+#include "bplus_leaf.h"
+#include "bplus_search.h"
 
 static BplusIterator* bplus_iterator_new_full(BplusTree const* tree,
                                               BplusLeaf const* leaf_from, BplusItem const* item_from,
@@ -35,74 +34,68 @@ static BplusIterator* bplus_iterator_new_from_first(BplusTree const* tree, Bplus
     return bplus_iterator_new_full(tree, tree->first, tree->first->node.items, leaf_to, item_to);
 }
 
-static BplusIterator* bplus_iterator_new(BplusTree const* tree)
+BplusIterator* bplus_iterator_new(BplusTree const* tree)
 {
     return bplus_iterator_new_to_last(tree, tree->first, tree->first->node.items);
 }
 
-static void bplus_iterator_destroy(BplusIterator* iterator)
+void bplus_iterator_destroy(BplusIterator* iterator)
 {
     g_return_if_fail(iterator != NULL);
 
     g_slice_free(BplusIterator, iterator);
 }
 
-static gboolean bplus_iterator_next(BplusIterator* iterator)
+gboolean bplus_iterator_next(BplusIterator* iterator)
 {
     g_return_val_if_fail(iterator != NULL, FALSE);
 
-    BplusItem const* const item = iterator->item + 1;
+    BplusItem const* const next = iterator->item + 1;
     BplusLeaf const* const leaf = iterator->leaf;
-    if (item == iterator->item_to)
+    if (next == iterator->item_to)
         return FALSE;
 
-    if (item - leaf->node.items >= leaf->node.length)
+    if (next - leaf->node.items < leaf->node.length)
     {
-        if (leaf->right == NULL)
-        {
-            return FALSE;
-        }
-        else
-        {
-            iterator->leaf = leaf->right;
-            iterator->item = leaf->right->node.items;
-        }
+        ++iterator->item;
     }
     else
     {
-        ++iterator->item;
+        if (leaf->right == NULL)
+            return FALSE;
+
+        iterator->leaf = leaf->right;
+        iterator->item = leaf->right->node.items;
     }
 
     return TRUE;
 }
 
-static gboolean bplus_iterator_previous(BplusIterator* iterator)
+gboolean bplus_iterator_previous(BplusIterator* iterator)
 {
     g_return_val_if_fail(iterator != NULL, FALSE);
 
     BplusItem const* const item = iterator->item;
     BplusLeaf const* const leaf = iterator->leaf;
+
     if (item == iterator->item_from)
         return FALSE;
 
     if (item - leaf->node.items == 0)
     {
         if (leaf->left == NULL)
-        {
             return FALSE;
-        }
-        else
-        {
-            iterator->leaf = leaf->left;
-            iterator->item = leaf->left->node.items + leaf->left->node.length;
-        }
+
+        iterator->leaf = leaf->left;
+        iterator->item = leaf->left->node.items + leaf->left->node.length;
     }
 
     --iterator->item;
+
     return TRUE;
 }
 
-static BplusItem const* bplus_iterator_get_item(BplusIterator const* iterator)
+BplusItem const* bplus_iterator_get_item(BplusIterator const* iterator)
 {
     g_return_val_if_fail(iterator != NULL, NULL);
 
@@ -112,14 +105,14 @@ static BplusItem const* bplus_iterator_get_item(BplusIterator const* iterator)
     return iterator->item;
 }
 
-static BplusIterator* bplus_tree_first(BplusTree const* tree)
+BplusIterator* bplus_tree_first(BplusTree const* tree)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 
     return bplus_iterator_new(tree);
 }
 
-static BplusIterator* bplus_iterator_from_key(BplusTree const* tree, BplusKey const key)
+BplusIterator* bplus_iterator_from_key(BplusTree const* tree, BplusKey const key)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 
@@ -130,7 +123,7 @@ static BplusIterator* bplus_iterator_from_key(BplusTree const* tree, BplusKey co
     return bplus_iterator_new_to_last(tree, (BplusLeaf*) path_from.leaf, path_from.leaf->items + path_from.index[0]);
 }
 
-static BplusIterator* bplus_iterator_to_key(BplusTree const* tree, BplusKey const key)
+BplusIterator* bplus_iterator_to_key(BplusTree const* tree, BplusKey const key)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 
@@ -141,7 +134,7 @@ static BplusIterator* bplus_iterator_to_key(BplusTree const* tree, BplusKey cons
     return bplus_iterator_new_from_first(tree, (BplusLeaf*) path_to.leaf, path_to.leaf->items + path_to.index[0]);
 }
 
-static BplusIterator* bplus_iterator_for_key(BplusTree const* tree, BplusKey const key)
+BplusIterator* bplus_iterator_for_key(BplusTree const* tree, BplusKey const key)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 
@@ -154,7 +147,7 @@ static BplusIterator* bplus_iterator_for_key(BplusTree const* tree, BplusKey con
                                    (BplusLeaf*) path_to.leaf, path_to.leaf->items + path_to.index[0]);
 }
 
-static BplusIterator* bplus_iterator_for_key_range(BplusTree const* tree, BplusKey const key_from, BplusKey const key_to)
+BplusIterator* bplus_iterator_for_key_range(BplusTree const* tree, BplusKey const key_from, BplusKey const key_to)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 

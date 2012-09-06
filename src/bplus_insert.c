@@ -1,3 +1,16 @@
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
+
+#include "bplus_insert.h"
+
+#include "bplus_node.h"
+#include "bplus_search.h"
+#include "bplus_rebalance.h"
+
+#include <string.h>
+
 static void bplus_leaf_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, BplusKey const key, BplusValue const value)
 {
     g_return_if_fail(node != NULL);
@@ -8,7 +21,7 @@ static void bplus_leaf_insert_at(BplusTree const* tree, BplusNode* node, size_t 
     bplus_value_at(node, index) = value;
 }
 
-static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusItem const* const items)
+void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusItem const* const items)
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index <= node->length);
@@ -21,9 +34,7 @@ static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t 
         return;
 
     for (size_t i = index; i < index + length; ++i)
-    {
         bplus_node_at(node, i)->parent = node;
-    }
 }
 
 void bplus_tree_insert(BplusTree* tree, BplusKey const key, BplusValue const value)

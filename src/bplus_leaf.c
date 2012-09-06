@@ -1,12 +1,11 @@
-struct _BplusLeaf
-{
-    BplusNode node;
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
 
-    BplusLeaf* left;
-    BplusLeaf* right;
-};
+#include "bplus_leaf.h"
 
-static BplusLeaf* bplus_leaf_new(BplusTree* tree)
+BplusLeaf* bplus_leaf_new(BplusTree* tree)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 
@@ -25,7 +24,7 @@ static BplusLeaf* bplus_leaf_new(BplusTree* tree)
     return leaf;
 }
 
-static BplusLeaf* bplus_leaf_new_right(BplusTree* tree, BplusLeaf* leaf_left)
+BplusLeaf* bplus_leaf_new_right(BplusTree* tree, BplusLeaf* leaf_left)
 {
     g_return_val_if_fail(tree != NULL, NULL);
     g_return_val_if_fail(leaf_left != NULL, NULL);
@@ -45,7 +44,7 @@ static BplusLeaf* bplus_leaf_new_right(BplusTree* tree, BplusLeaf* leaf_left)
     return leaf_right;
 }
 
-static void bplus_leaf_destroy(BplusTree* tree, BplusLeaf* leaf)
+void bplus_leaf_destroy(BplusTree* tree, BplusLeaf* leaf)
 {
     g_return_if_fail(tree != NULL);
     g_return_if_fail(leaf != NULL);
@@ -67,4 +66,6 @@ static void bplus_leaf_destroy(BplusTree* tree, BplusLeaf* leaf)
     tree->leaf_count--;
     tree->underflow_count--;
 #endif /* ifdef BPLUS_TREE_GATHER_STATS */
+
+    g_slice_free(BplusLeaf, leaf);
 }

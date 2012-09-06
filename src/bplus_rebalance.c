@@ -1,4 +1,16 @@
-static void bplus_rebalance_propagate(BplusTree const* tree, BplusPath* path)
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
+
+#include "bplus_rebalance.h"
+
+#include "bplus_node.h"
+#include "bplus_search.h"
+#include "bplus_insert.h"
+#include "bplus_remove.h"
+
+void bplus_rebalance_propagate(BplusTree const* tree, BplusPath* path)
 {
     g_return_if_fail(tree != NULL);
     g_return_if_fail(path != NULL);
@@ -178,9 +190,7 @@ static int bplus_rebalance_try_merge(BplusTree* tree, BplusNode* node, size_t co
     if (!bplus_node_find_merge_candidate(tree, index, node, &node_left, &node_right))
         return 0;
 
-    BplusKey const key_right   = bplus_key_first(node_right);
-    size_t const   index_right = (node == node_left) ? index + 1 : index;
-
+    size_t const index_right = (node == node_left) ? index + 1 : index;
     bplus_rebalance_data(tree, node_left, node_right);
 
     if (node_right->length == 0)
@@ -192,10 +202,11 @@ static int bplus_rebalance_try_merge(BplusTree* tree, BplusNode* node, size_t co
     {
         bplus_key_at(node->parent, index_right) = bplus_key_first(node_right);
     }
+
     return 1;
 }
 
-static void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
+void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
 {
     g_return_if_fail(tree != NULL);
     g_return_if_fail(path != NULL);
@@ -243,7 +254,7 @@ static void bplus_rebalance_shrink_tree(BplusTree* tree)
     tree->height -= i;
 }
 
-static void bplus_rebalance_underfilled(BplusTree* tree, BplusPath const* path)
+void bplus_rebalance_underfilled(BplusTree* tree, BplusPath const* path)
 {
     g_return_if_fail(tree != NULL);
     g_return_if_fail(path != NULL);

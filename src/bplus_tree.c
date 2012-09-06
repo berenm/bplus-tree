@@ -1,97 +1,48 @@
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
+
+#include "bplus_tree_private.h"
+
+#include "bplus_leaf.h"
+#include "bplus_search.h"
+#include "bplus_iterator.h"
+#include "bplus_foreach.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "bplus_tree.h"
+int bplus_tree_print(BplusTree const* const tree, char const* format, ...) __attribute__((format(printf, 2, 3)));
 
-BplusTree* bplus_tree_ref(BplusTree* tree);
-void       bplus_tree_unref(BplusTree* tree);
-
-static BplusNode* bplus_node_new(BplusTree* tree);
-static BplusNode* bplus_node_new_right(BplusTree* tree, BplusNode* bplus_node_left);
-static void       bplus_node_init(BplusNode* node, gboolean is_leaf);
-static void       bplus_node_destroy(BplusTree* tree, BplusNode* node);
-
-static void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length, BplusItem const* items);
-static void bplus_node_remove_at(BplusTree const* tree, BplusNode* node, size_t const index, size_t const length);
-
-static BplusLeaf* bplus_leaf_new(BplusTree* tree);
-static BplusLeaf* bplus_leaf_new_right(BplusTree* tree, BplusLeaf* bplus_leaf_left);
-static void       bplus_leaf_destroy(BplusTree* tree, BplusLeaf* bplus_leaf);
-
-int __attribute__((format(printf, 2, 3))) bplus_tree_print(BplusTree const* const tree, char const* format, ...);
-
-struct _BplusTree
+BplusTree* bplus_tree_new()
 {
-    BplusNode* root;
-
-    BplusLeaf* first;
-    BplusLeaf* last;
-
-    size_t   height;
-    gint     ref_count;
-    gboolean allow_duplicate_keys;
-
-#ifdef BPLUS_TREE_GATHER_STATS
-    size_t node_count;
-    size_t leaf_count;
-    size_t underflow_count;
-    size_t overflow_count;
-#endif /* ifdef BPLUS_TREE_GATHER_STATS */
-
-#ifdef BPLUS_TREE_GENERIC
-    GCompareFunc compare_keys;
-#endif /* ifdef BPLUS_TREE_GENERIC */
-};
-
-BplusTree* bplus_tree_ref(BplusTree* tree)
-{
-    g_return_val_if_fail(tree != NULL, NULL);
-
-    g_atomic_int_inc(&tree->ref_count);
-
-    return tree;
+    return bplus_tree_new_full(1);
 }
 
-void bplus_tree_unref(BplusTree* tree)
+BplusTree* bplus_tree_new_full(gboolean allow_duplicate_keys)
 {
-    g_return_if_fail(tree != NULL);
-
-    if (g_atomic_int_dec_and_test(&tree->ref_count))
-    {
-        bplus_node_destroy(tree, tree->root);
-
-        g_slice_free(BplusTree, tree);
-    }
-}
-
-BplusTree* bplus_tree_new(gboolean allow_duplicate_keys
-#ifdef BPLUS_TREE_GENERIC
-                          , GCompareFunc key_compare_func
-#endif /* ifndef BPLUS_TREE_GENERIC */
-                          )
-{
-
-    BplusTree* tree = g_slice_new(BplusTree);
+    BplusTree* tree = malloc(sizeof(BplusTree));
 
     tree->first = bplus_leaf_new(tree);
     tree->last  = tree->first;
     tree->root  = (BplusNode*) tree->first;
 
     tree->height               = 1;
-    tree->ref_count            = 1;
     tree->allow_duplicate_keys = allow_duplicate_keys;
-
-#ifdef BPLUS_TREE_GENERIC
-    tree->compare_keys = key_compare_func;
-#endif /* ifndef BPLUS_TREE_GENERIC */
 
     return tree;
 }
 
 void bplus_tree_print_stats(BplusTree* tree);
+
+static void bplus_foreach_node_destroy(BplusTree* tree, BplusNode* node, void* argument)
+{
+    bplus_node_destroy(tree, node);
+}
 
 void bplus_tree_destroy(BplusTree* tree)
 {
@@ -101,27 +52,25 @@ void bplus_tree_destroy(BplusTree* tree)
     bplus_tree_print_stats(tree);
 #endif /* ifdef BPLUS_TREE_GATHER_STATS */
 
-    // bplus_tree_remove_all(tree);
-    bplus_tree_unref(tree);
+    bplus_foreach_node_in_tree(tree, &bplus_foreach_node_destroy, NULL);
+    free(tree);
 }
 
-#include "bplus_node.c"
-#include "bplus_leaf.c"
-#include "bplus_search.c"
-#include "bplus_rebalance.c"
-#include "bplus_insert.c"
-#include "bplus_remove.c"
-#include "bplus_iterator.c"
+void bplus_tree_destroy_each(BplusTree* tree, BplusForeachItemFunc* foreach, void* argument)
+{
+    bplus_foreach_item_in_tree(tree, foreach, argument);
+    bplus_tree_destroy(tree);
+}
 
 #ifdef BPLUS_TREE_GATHER_STATS
 
 void bplus_tree_print_stats(BplusTree* tree)
 {
-    g_print("tree height: %zu\n", tree->height);
-    g_print("node count: %zu\n", tree->node_count);
-    g_print("leaf count: %zu\n", tree->leaf_count);
-    g_print("underflow count: %zu\n", tree->underflow_count);
-    g_print("overflow count: %zu\n", tree->overflow_count);
+    printf("tree height: %zu\n", tree->height);
+    printf("node count: %zu\n", tree->node_count);
+    printf("leaf count: %zu\n", tree->leaf_count);
+    printf("underflow count: %zu\n", tree->underflow_count);
+    printf("overflow count: %zu\n", tree->overflow_count);
 }
 
 #endif /* ifdef BPLUS_TREE_GATHER_STATS */
@@ -135,10 +84,36 @@ BplusValue bplus_tree_get(BplusTree* tree, BplusKey key)
     BplusNode const* node  = path.leaf;
     BplusValue       value = NULL;
 
-    if (bplus_key_eq(tree, bplus_key_at(node, index), key))
+    if ((index < node->length) && bplus_key_eq(tree, bplus_key_at(node, index), key))
         value = bplus_value_at(node, index);
 
     return value;
+}
+
+BplusValue bplus_tree_get_first(BplusTree const* tree)
+{
+    if (tree->first->node.length == 0)
+        return NULL;
+
+    return tree->first->node.items[0].value;
+}
+
+BplusValue bplus_tree_get_nth(BplusTree const* tree, size_t position)
+{
+    BplusLeaf* leaf = tree->first;
+    if (leaf->node.length == 0)
+        return NULL;
+
+    while (leaf != NULL && position >= leaf->node.length)
+    {
+        position -= leaf->node.length;
+        leaf      = leaf->right;
+    }
+
+    if (leaf != NULL)
+        return leaf->node.items[position].value;
+
+    return NULL;
 }
 
 void bplus_value_print(BplusNode* node, size_t const index, BplusKey key, BplusValue value, int depth)

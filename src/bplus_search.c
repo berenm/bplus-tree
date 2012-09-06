@@ -1,10 +1,12 @@
-typedef struct _BplusPath BplusPath;
-struct _BplusPath
-{
-    size_t     length;
-    size_t     index[16];
-    BplusNode* leaf;
-};
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
+
+#include "bplus_search.h"
+
+#include "bplus_node.h"
+#include "bplus_leaf.h"
 
 #define bplus_node_get_key_index_op(operator_m, tree_m, node_m, key_m)      \
     do                                                                      \
@@ -71,7 +73,7 @@ static size_t bplus_node_get_key_index_before(BplusTree const* tree, BplusNode c
     }                                                                              \
     while (0)
 
-static void bplus_tree_get_path_to_key(BplusTree const* tree, BplusKey const key, BplusPath* path)
+void bplus_tree_get_path_to_key(BplusTree const* tree, BplusKey const key, BplusPath* path)
 {
     g_return_if_fail(tree != NULL);
     g_assert(tree->height < sizeof((path)->index) / sizeof(*(path)->index));
@@ -87,7 +89,7 @@ static void bplus_tree_get_path_to_key_before(BplusTree const* tree, BplusKey co
     bplus_tree_get_path_to_key_op(bplus_node_get_key_index_before, tree, key, path);
 }
 
-static void bplus_tree_get_paths_to_key_range(BplusTree const* tree, BplusKey key_from, BplusKey key_to, BplusPath* path_from, BplusPath* path_to)
+void bplus_tree_get_paths_to_key_range(BplusTree const* tree, BplusKey key_from, BplusKey key_to, BplusPath* path_from, BplusPath* path_to)
 {
     g_return_if_fail(tree != NULL);
     g_assert(tree->height < sizeof((path_from)->index) / sizeof(*(path_from)->index));
@@ -122,5 +124,4 @@ static void bplus_tree_get_paths_to_key_range(BplusTree const* tree, BplusKey ke
             path_from->index[0] = 0;
         }
     }
-
 }

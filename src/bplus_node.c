@@ -1,50 +1,15 @@
-struct _BplusItem
-{
-    BplusKey   key;
-    BplusValue value;
-};
+/**
+ * Distributed under the Boost Software License, Version 1.0.
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
+ */
 
-struct _BplusNode
-{
-    size_t    length;
-    BplusItem items[BPLUS_TREE_ORDER];
+#include "bplus_node.h"
 
-    gboolean   is_leaf;
-    BplusNode* parent;
-};
+#include "bplus_leaf.h"
 
-#ifndef BPLUS_TREE_GENERIC
-# define bplus_key_gt(bplus_tree_m, k1, k2)  ((k1) > (k2))
-# define bplus_key_gte(bplus_tree_m, k1, k2) ((k1) >= (k2))
-# define bplus_key_lt(bplus_tree_m, k1, k2)  ((k1) < (k2))
-# define bplus_key_lte(bplus_tree_m, k1, k2) ((k1) <= (k2))
-# define bplus_key_eq(bplus_tree_m, k1, k2)  ((k1) == (k2))
-# define bplus_key_neq(bplus_tree_m, k1, k2) ((k1) != (k2))
+#include <string.h>
 
-#else /* ifndef BPLUS_TREE_GENERIC */
-# define bplus_key_gt(bplus_tree_m, k1, k2)  ((bplus_tree_m)->compare_keys((k1), (k2)) > 0)
-# define bplus_key_gte(bplus_tree_m, k1, k2) ((bplus_tree_m)->compare_keys((k1), (k2)) >= 0)
-# define bplus_key_lt(bplus_tree_m, k1, k2)  ((bplus_tree_m)->compare_keys((k1), (k2)) < 0)
-# define bplus_key_lte(bplus_tree_m, k1, k2) ((bplus_tree_m)->compare_keys((k1), (k2)) <= 0)
-# define bplus_key_eq(bplus_tree_m, k1, k2)  ((bplus_tree_m)->compare_keys((k1), (k2)) == 0)
-# define bplus_key_neq(bplus_tree_m, k1, k2) ((bplus_tree_m)->compare_keys((k1), (k2)) != 0)
-
-#endif /* ifndef BPLUS_TREE_GENERIC */
-
-#define bplus_key_at(node_m, index_m)   (((BplusNode*) node_m)->items[(index_m)].key)
-#define bplus_key_first(node_m)         bplus_key_at(node_m, 0)
-#define bplus_key_last(node_m)          bplus_key_at(node_m, (node_m)->length - 1)
-#define bplus_value_at(node_m, index_m) (((BplusNode*) node_m)->items[(index_m)].value)
-#define bplus_value_first(node_m)       bplus_value_at(node_m, 0)
-#define bplus_value_last(node_m)        bplus_value_at(node_m, (node_m)->length - 1)
-#define bplus_node_at(node_m, index_m)  ((BplusNode*) bplus_value_at(node_m, index_m))
-#define bplus_node_first(node_m)        ((BplusNode*) bplus_value_first(node_m))
-#define bplus_node_last(node_m)         ((BplusNode*) bplus_value_last(node_m))
-
-#define bplus_node_overfilled(node_m)  ((node_m)->length > (BPLUS_TREE_ORDER - 1))
-#define bplus_node_underfilled(node_m) ((node_m)->length <= 1)
-
-static BplusNode* bplus_node_new(BplusTree* tree)
+BplusNode* bplus_node_new(BplusTree* tree)
 {
     g_return_val_if_fail(tree != NULL, NULL);
 
@@ -60,7 +25,7 @@ static BplusNode* bplus_node_new(BplusTree* tree)
     return node;
 }
 
-static BplusNode* bplus_node_new_right(BplusTree* tree, BplusNode* node_left)
+BplusNode* bplus_node_new_right(BplusTree* tree, BplusNode* node_left)
 {
     g_return_val_if_fail(tree != NULL, NULL);
     g_return_val_if_fail(node_left != NULL, NULL);
@@ -77,7 +42,7 @@ static BplusNode* bplus_node_new_right(BplusTree* tree, BplusNode* node_left)
     return node_right;
 }
 
-static void bplus_node_init(BplusNode* node, gboolean is_leaf)
+void bplus_node_init(BplusNode* node, gboolean is_leaf)
 {
     g_return_if_fail(node != NULL);
 
@@ -87,7 +52,7 @@ static void bplus_node_init(BplusNode* node, gboolean is_leaf)
     node->length = 0;
 }
 
-static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
+void bplus_node_destroy(BplusTree* tree, BplusNode* node)
 {
     g_return_if_fail(tree != NULL);
     g_return_if_fail(node != NULL);
@@ -98,21 +63,16 @@ static void bplus_node_destroy(BplusTree* tree, BplusNode* node)
     }
     else
     {
-        for (size_t i = 0; i < node->length; ++i)
-        {
-            bplus_node_destroy(tree, bplus_node_at(node, i));
-        }
-
 #ifdef BPLUS_TREE_GATHER_STATS
         tree->node_count--;
         tree->underflow_count--;
 #endif /* ifdef BPLUS_TREE_GATHER_STATS */
-    }
 
-    g_slice_free(BplusNode, node);
+        g_slice_free(BplusNode, node);
+    }
 }
 
-static void bplus_node_move_and_resize_data(BplusTree const* tree, BplusNode* node, size_t const index_to, size_t const index_from)
+void bplus_node_move_and_resize_data(BplusTree const* tree, BplusNode* node, size_t const index_to, size_t const index_from)
 {
     g_return_if_fail(node != NULL);
     g_return_if_fail(index_from <= node->length);
