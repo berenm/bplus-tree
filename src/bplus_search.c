@@ -52,11 +52,12 @@ static size_t bplus_node_get_key_index_before(BplusTree const* tree, BplusNode c
                                                                                    \
         BplusNode const* node   = (tree_m)->root;                                  \
         size_t const     length = (tree_m)->height;                                \
-        for (size_t i = length; i > 0; --i)                                        \
+        size_t i, j;                                                               \
+        for (i = length; i > 0; --i)                                               \
         {                                                                          \
-            for (int i = 0; i < BPLUS_TREE_ORDER * sizeof(*node->items) / 64; ++i) \
+            for (j = 0; j < BPLUS_TREE_ORDER * sizeof(*node->items) / 64; ++j)     \
             {                                                                      \
-                __builtin_prefetch(node->items + i * 64 / sizeof(*node->items));   \
+                __builtin_prefetch(node->items + j * 64 / sizeof(*node->items));   \
             }                                                                      \
                                                                                    \
             size_t const index = operator_m((tree_m), node, (key_m));              \

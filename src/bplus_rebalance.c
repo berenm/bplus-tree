@@ -16,7 +16,8 @@ void bplus_rebalance_propagate(BplusTree const* tree, BplusPath* path)
     g_return_if_fail(path != NULL);
 
     BplusNode* node = path->leaf;
-    for (size_t i = 1; i < path->length; ++i)
+    size_t i;
+    for (i = 1; i < path->length; ++i)
     {
         size_t const   index = path->index[i];
         BplusKey const key   = bplus_key_first(node);
@@ -212,7 +213,8 @@ void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
     g_return_if_fail(path != NULL);
 
     BplusNode* node = (BplusNode*) path->leaf;
-    for (size_t i = 1; i < path->length; ++i)
+    size_t i;
+    for (i = 1; i < path->length; ++i)
     {
         if (!bplus_node_overfilled(node))
             break;
@@ -260,7 +262,8 @@ void bplus_rebalance_underfilled(BplusTree* tree, BplusPath const* path)
     g_return_if_fail(path != NULL);
 
     BplusNode* node = (BplusNode*) path->leaf;
-    for (size_t i = 1; i < path->length; ++i)
+    size_t i;
+    for (i = 1; i < path->length; ++i)
     {
         if (!bplus_node_underfilled(node))
             break;

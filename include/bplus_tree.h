@@ -8,17 +8,30 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
-#include <glib.h>
+#ifdef USE_GLIB
+  #include <glib.h>
+#else
+  #include <assert.h>
+  #define g_assert                        assert
+  #define gboolean                        int
+  #define TRUE                            1
+  #define FALSE                           0
+  #define g_slice_new(type)               (type*)malloc(sizeof(type))
+  #define g_slice_free(type,ptr)          free(ptr)
+  #define g_return_if_fail(expr)          if(!(expr))return;
+  #define g_return_val_if_fail(expr,ret)  if(!(expr))return(ret);
+#endif
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
 
+#define KeyFmt            PRIu64
 typedef uint64_t          BplusKey;
 typedef void*             BplusValue;
-typedef struct _BplusItem BplusItem;
 
 struct _BplusItem
 {
@@ -26,6 +39,7 @@ struct _BplusItem
     BplusValue value;
 };
 
+typedef struct _BplusItem     BplusItem;
 typedef struct _BplusTree     BplusTree;
 typedef struct _BplusIterator BplusIterator;
 
@@ -55,6 +69,8 @@ BplusIterator*   bplus_iterator_from_key(BplusTree const* tree, BplusKey const k
 BplusIterator*   bplus_iterator_to_key(BplusTree const* tree, BplusKey const key);
 BplusIterator*   bplus_iterator_for_key(BplusTree const* tree, BplusKey const key);
 BplusIterator*   bplus_iterator_for_key_range(BplusTree const* tree, BplusKey const key_from, BplusKey const key_to);
+
+int bplus_iterator_print(BplusTree const* tree, BplusIterator const* iterator);
 
 #ifdef __cplusplus
 }

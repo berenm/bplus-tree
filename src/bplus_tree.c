@@ -120,7 +120,7 @@ void bplus_value_print(BplusNode* node, size_t const index, BplusKey key, BplusV
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stderr, "%*.s n%p_%zu[label=\"%lu\",fontcolor=\"#000099\"];", 0, indent, node, index, key);
+    fprintf(stderr, "%*.s n%p_%zu[label=\"%" KeyFmt "\",fontcolor=\"#000099\"];", 0, indent, node, index, key);
     fprintf(stderr, "%*.s n%p->n%p_%zu;", 0, indent, node, node, index);
 }
 
@@ -128,7 +128,7 @@ void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int dept
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stderr, "%*.s n%p[label=\"%lu\"];", 0, indent, node, key);
+    fprintf(stderr, "%*.s n%p[label=\"%" KeyFmt "\"];", 0, indent, node, key);
     fprintf(stderr, "%*.s n%p->n%p;", 0, indent, parent, node);
 
     if (node->is_leaf)
@@ -139,7 +139,8 @@ void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int dept
             fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->left);
     }
 
-    for (size_t i = 0; i < node->length; ++i)
+    size_t i;
+    for (i = 0; i < node->length; ++i)
     {
         if (node->is_leaf)
             bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
@@ -168,7 +169,8 @@ int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
             fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->left);
     }
 
-    for (size_t i = 0; i < node->length; ++i)
+    size_t i;
+    for (i = 0; i < node->length; ++i)
     {
         if (node->is_leaf)
             bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
