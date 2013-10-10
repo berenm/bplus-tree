@@ -70,7 +70,7 @@ BplusIterator*   bplus_iterator_to_key(BplusTree const* tree, BplusKey const key
 BplusIterator*   bplus_iterator_for_key(BplusTree const* tree, BplusKey const key);
 BplusIterator*   bplus_iterator_for_key_range(BplusTree const* tree, BplusKey const key_from, BplusKey const key_to);
 
-int bplus_iterator_print(BplusTree const* tree, BplusIterator const* iterator);
+int bplus_tree_print(BplusTree const* const tree, char const* format, ...);
 
 #ifdef __cplusplus
 }

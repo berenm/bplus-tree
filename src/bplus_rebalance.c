@@ -209,11 +209,20 @@ static int bplus_rebalance_try_merge(BplusTree* tree, BplusNode* node, size_t co
 
 void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
 {
+    size_t i;
     g_return_if_fail(tree != NULL);
     g_return_if_fail(path != NULL);
 
     BplusNode* node = (BplusNode*) path->leaf;
-    size_t i;
+
+#if 1
+    #include <stdio.h>
+    fprintf(stderr, "rebalance overfilled %zu\n", node->length);
+    for (i = 1; i < path->length; ++i)
+        fprintf(stderr, " %zu", path->index[i]);
+    fprintf(stderr, "\n");
+#endif
+
     for (i = 1; i < path->length; ++i)
     {
         if (!bplus_node_overfilled(node))
@@ -226,6 +235,7 @@ void bplus_rebalance_overfilled(BplusTree* tree, BplusPath const* path)
         node = node->parent;
     }
 
+    g_assert(node != NULL);
     if (bplus_node_overfilled(node))
     {
         bplus_rebalance_new_root(tree);

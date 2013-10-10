@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I../include
+CFLAGS = -I../include -g
 AR = ar
 
 TARGET=bplus_tree
