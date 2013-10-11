@@ -1,7 +1,7 @@
 #include "bplus_tree.h"
 #include "bplus_tree_private.h"
 
-#define __NUM__   (BPLUS_TREE_ORDER*2)
+#define __NUM__   (BPLUS_TREE_ORDER)
 
 int main()
 {

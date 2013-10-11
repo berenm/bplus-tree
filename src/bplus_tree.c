@@ -116,15 +116,19 @@ BplusValue bplus_tree_get_nth(BplusTree const* tree, size_t position)
     return NULL;
 }
 
-void bplus_value_print(BplusNode* node, size_t const index, BplusKey key, BplusValue value, int depth)
+void bplus_leaf_print(BplusNode* node)
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stdout, "%*.s n%p_%zu[label=\"[%" KeyFmt "]\",fontcolor=\"#000099\"];\n", 0, indent, node, index, key);
-    fprintf(stdout, "%*.s n%p->n%p_%zu;\n", 0, indent, node, node, index);
+    fprintf(stdout, "%*.s n%p_vals[label=\"", 0, indent, node);
+    size_t i;
+    for(i = 0; i < node->length; ++i)
+        fprintf(stdout, "%" KeyFmt "\\n", bplus_key_at(node, i));
+    fprintf(stdout, "\",fontcolor=\"#000099\"];\n");
+    fprintf(stdout, "%*.s n%p->n%p_vals;\n", 0, indent, node, node);
 }
 
-void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int depth)
+void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node)
 {
     static char const* indent = "                                                                   ";
 
@@ -140,14 +144,11 @@ void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int dept
     }
 
     size_t i;
-    for (i = 0; i < node->length; ++i)
-    {
-        if (node->is_leaf)
-            bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
-        else
-            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i), depth + 2);
-
-    }
+    if (node->is_leaf)
+        bplus_leaf_print(node);
+    else
+        for (i = 0; i < node->length; ++i)
+            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i));
 }
 
 int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
@@ -170,13 +171,12 @@ int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
     }
 
     size_t i;
-    for (i = 0; i < node->length; ++i)
+    if (node->is_leaf)
+        bplus_leaf_print(node);
+    else
     {
-        if (node->is_leaf)
-            bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
-        else
-            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i), 2);
-
+        for (i = 0; i < node->length; ++i)
+            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i));
     }
 
     va_list vargs;
