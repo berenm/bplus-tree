@@ -116,73 +116,76 @@ BplusValue bplus_tree_get_nth(BplusTree const* tree, size_t position)
     return NULL;
 }
 
-void bplus_value_print(BplusNode* node, size_t const index, BplusKey key, BplusValue value, int depth)
+void bplus_leaf_print(BplusNode* node)
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stderr, "%*.s n%p_%zu[label=\"%lu\",fontcolor=\"#000099\"];", 0, indent, node, index, key);
-    fprintf(stderr, "%*.s n%p->n%p_%zu;", 0, indent, node, node, index);
+    fprintf(stdout, "%*.s n%p_vals[label=\"", 0, indent, node);
+    size_t i;
+    for(i = 0; i < node->length; ++i)
+        fprintf(stdout, "%" KeyFmt "\\n", bplus_key_at(node, i));
+    fprintf(stdout, "\",fontcolor=\"#000099\"];\n");
+    fprintf(stdout, "%*.s n%p->n%p_vals;\n", 0, indent, node, node);
 }
 
-void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node, int depth)
+void bplus_node_print(BplusNode* parent, BplusKey key, BplusNode* node)
 {
     static char const* indent = "                                                                   ";
 
-    fprintf(stderr, "%*.s n%p[label=\"%lu\"];", 0, indent, node, key);
-    fprintf(stderr, "%*.s n%p->n%p;", 0, indent, parent, node);
+    fprintf(stdout, "%*.s n%p[label=\"%" KeyFmt "\"];// node\n", 0, indent, node, key);
+    fprintf(stdout, "%*.s n%p->n%p;\n", 0, indent, parent, node);
 
     if (node->is_leaf)
     {
         if (((BplusLeaf*) node)->right != NULL)
-            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->right);
+            fprintf(stdout, "n%p->n%p[constraint=false];// right\n", node, ((BplusLeaf*) node)->right);
         if (((BplusLeaf*) node)->left != NULL)
-            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->left);
+            fprintf(stdout, "n%p->n%p[constraint=false];// left\n", node, ((BplusLeaf*) node)->left);
     }
 
-    for (size_t i = 0; i < node->length; ++i)
-    {
-        if (node->is_leaf)
-            bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
-        else
-            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i), depth + 2);
-
-    }
+    size_t i;
+    if (node->is_leaf)
+        bplus_leaf_print(node);
+    else
+        for (i = 0; i < node->length; ++i)
+            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i));
 }
 
 int bplus_tree_print(BplusTree const* const tree, char const* format, ...)
 {
     static int count = 0;
 
-    fprintf(stderr, "echo 'digraph {");
-    fprintf(stderr, "graph[ordering=\"out\"];\n");
-    fprintf(stderr, "node[width=0.2,height=0.2,fixedsize=true,fontsize=6,fontcolor=\"#990000\",shape=plaintext];");
-    fprintf(stderr, "edge[arrowsize=0.1,fontsize=6];");
+    fprintf(stdout, "digraph {\n");
+    fprintf(stdout, "graph[ordering=\"out\"];\n");
+    fprintf(stdout, "node[fontcolor=\"#990000\",shape=plaintext];\n");
+    fprintf(stdout, "edge[arrowsize=0.6,fontsize=6];\n");
 
     BplusNode* node = tree->root;
-    fprintf(stderr, "n%p[label=\"0\"];", node);
+    fprintf(stdout, "n%p[label=\"root\"];\n", node);
     if (node->is_leaf)
     {
         if (((BplusLeaf*) node)->right != NULL)
-            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->right);
+            fprintf(stdout, "n%p->n%p[constraint=false];\n", node, ((BplusLeaf*) node)->right);
         if (((BplusLeaf*) node)->left != NULL)
-            fprintf(stderr, "n%p->n%p[constraint=false];", node, ((BplusLeaf*) node)->left);
+            fprintf(stdout, "n%p->n%p[constraint=false];\n", node, ((BplusLeaf*) node)->left);
     }
 
-    for (size_t i = 0; i < node->length; ++i)
+    size_t i;
+    if (node->is_leaf)
+        bplus_leaf_print(node);
+    else
     {
-        if (node->is_leaf)
-            bplus_value_print(node, i, bplus_key_at(node, i), bplus_value_at(node, i), 2);
-        else
-            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i), 2);
-
+        for (i = 0; i < node->length; ++i)
+            bplus_node_print(node, bplus_key_at(node, i), bplus_node_at(node, i));
     }
 
     va_list vargs;
     va_start(vargs, format);
-    vfprintf(stderr, format, vargs);
+    vfprintf(stdout, format, vargs);
     va_end(vargs);
 
-    fprintf(stderr, "}'| dot -T png -o tree-%d.png\n", count);
+	fprintf(stdout, "}\n");
+    fprintf(stderr, "dot -T png -o tree-%d.png\n", count);
     count++;
     return 0;
 }

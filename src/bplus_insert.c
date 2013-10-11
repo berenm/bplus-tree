@@ -33,7 +33,8 @@ void bplus_node_insert_at(BplusTree const* tree, BplusNode* node, size_t const i
     if (node->is_leaf)
         return;
 
-    for (size_t i = index; i < index + length; ++i)
+    size_t i;
+    for (i = index; i < index + length; ++i)
         bplus_node_at(node, i)->parent = node;
 }
 

@@ -14,7 +14,7 @@ extern "C"
 #endif // ifdef __cplusplus
 
 #ifndef BPLUS_TREE_ORDER
-# define BPLUS_TREE_ORDER 32
+# define BPLUS_TREE_ORDER 16
 #endif /* ifndef BPLUS_TREE_ORDER */
 
 typedef struct _BplusNode BplusNode;
